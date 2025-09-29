@@ -1,7 +1,15 @@
-import { useState, useEffect } from "react";
-import { Image, Pressable, ScrollView, Text, View, ActivityIndicator } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import axios from "axios";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  Linking,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ---------------------
 // Types
@@ -13,6 +21,66 @@ interface IndexData {
   changePercent1D: number;
   changeAbs: number;
   marketState: string;
+}
+
+interface ActiveStockData {
+  name: string;
+  exchange: string;
+  symbol: string;
+  currentValue: number;
+  changePercent1D: number;
+  changeAbs: number;
+  volume: string;
+}
+
+interface SpotlightData {
+  symbol: string;
+  price: number;
+  marketCap: number;
+  beta: number;
+  lastDividend: number;
+  range: string;
+  change: number;
+  changePercentage: number;
+  volume: number;
+  averageVolume: number;
+  companyName: string;
+  currency: string;
+  cik: string;
+  isin: string;
+  cusip: string;
+  exchangeFullName: string;
+  exchange: string;
+  industry: string;
+  website: string;
+  description: string;
+  ceo: string;
+  sector: string;
+  country: string;
+  fullTimeEmployees: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  image: string;
+  ipoDate: string;
+  defaultImage: boolean;
+  isEtf: boolean;
+  isActivelyTrading: boolean;
+  isAdr: boolean;
+  isFund: boolean;
+}
+
+interface NewsData {
+  title: string;
+  date: string;
+  content: string;
+  tickers: string;
+  image: string;
+  link: string;
+  author: string;
+  site: string;
 }
 
 interface ApiResponse<T> {
@@ -37,204 +105,65 @@ const fetchIndexes = async (): Promise<IndexData[]> => {
   }
 };
 
-// ---------------------
-// Mock Data (for other sections)
-// ---------------------
-const mockStocks = {
-  gainers: [
-    {
-      symbol: "AAPL",
-      exchange: "NasdaqGS",
-      currentValue: 220.4,
-      changePercent1D: 2.5,
-    },
-    {
-      symbol: "MSFT",
-      exchange: "NasdaqGS",
-      currentValue: 380.9,
-      changePercent1D: 1.2,
-    },
-    {
-      symbol: "TSLA",
-      exchange: "NasdaqGS",
-      currentValue: 440.4,
-      changePercent1D: 4.0,
-    },
-    {
-      symbol: "AMZN",
-      exchange: "NasdaqGS",
-      currentValue: 150.2,
-      changePercent1D: -0.5,
-    },
-    {
-      symbol: "NVDA",
-      exchange: "NasdaqGS",
-      currentValue: 178.1,
-      changePercent1D: 0.3,
-    },
-    {
-      symbol: "GOOGL",
-      exchange: "NasdaqGS",
-      currentValue: 140.3,
-      changePercent1D: 2.0,
-    },
-    {
-      symbol: "META",
-      exchange: "NasdaqGS",
-      currentValue: 305.8,
-      changePercent1D: 1.8,
-    },
-    {
-      symbol: "NFLX",
-      exchange: "NasdaqGS",
-      currentValue: 505.2,
-      changePercent1D: 3.1,
-    },
-    {
-      symbol: "BABA",
-      exchange: "NYSE",
-      currentValue: 88.7,
-      changePercent1D: -1.1,
-    },
-    {
-      symbol: "ORCL",
-      exchange: "NYSE",
-      currentValue: 120.4,
-      changePercent1D: 0.9,
-    },
-  ],
-  losers: [
-    {
-      symbol: "XYZ",
-      exchange: "NYSE",
-      currentValue: 45.2,
-      changePercent1D: -3.2,
-    },
-    {
-      symbol: "ABC",
-      exchange: "NasdaqGS",
-      currentValue: 78.9,
-      changePercent1D: -2.1,
-    },
-  ],
-  active: [
-    {
-      symbol: "SPY",
-      exchange: "NYSE",
-      currentValue: 425.6,
-      changePercent1D: 0.8,
-    },
-    {
-      symbol: "QQQ",
-      exchange: "NasdaqGS",
-      currentValue: 355.2,
-      changePercent1D: 1.1,
-    },
-  ],
+const fetchActiveStocks = async (): Promise<ActiveStockData[]> => {
+  try {
+    const response = await axios.get<ApiResponse<ActiveStockData[]>>(
+      "https://stock-explore-six.vercel.app/api/v1/active"
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching active stocks:", error);
+    throw error;
+  }
 };
 
-const spotlightStock = {
-  symbol: "NVDA",
-  name: "NVIDIA Corporation",
-  logo: "https://logo.clearbit.com/nvidia.com",
-  currentValue: 178.1,
-  changePercent1D: 0.3,
-  description:
-    "Leading designer of graphics processing units (GPUs) for gaming and professional markets, as well as system on chip units (SoCs) for mobile computing and automotive.",
+const fetchGainerStocks = async (): Promise<ActiveStockData[]> => {
+  try {
+    const response = await axios.get<ApiResponse<ActiveStockData[]>>(
+      "https://stock-explore-six.vercel.app/api/v1/gainers"
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching gainer stocks:", error);
+    throw error;
+  }
 };
 
-const mockNews = [
-  {
-    title:
-      "American Rebel Holdings, Inc. (AREB) Stabilizes Financial Position and Invests in Electric Motorcycle Innovator",
-    date: "2025-09-26 18:00:04",
-    author: "Gordon Thompson",
-    site: "Financial Modeling Prep",
-    image:
-      "https://portal.financialmodelingprep.com/positions/68d6e347cd7a0ed06b2415c2.jpeg",
-    link: "https://financialmodelingprep.com/market-news/american-rebel-holdings-secures-financing-invests-electric-motorcycle",
-  },
-  {
-    title: "Tesla Announces New Gigafactory in Southeast Asia",
-    date: "2025-09-26 15:30:00",
-    author: "Sarah Mitchell",
-    site: "Tech Daily",
-    image: "https://picsum.photos/seed/tesla/400/300",
-    link: "https://example.com/news/tesla-gigafactory",
-  },
-  {
-    title: "Apple Unveils Revolutionary AI Chip for Next-Gen Devices",
-    date: "2025-09-26 14:15:22",
-    author: "John Davis",
-    site: "Innovation News",
-    image: "https://picsum.photos/seed/apple/400/300",
-    link: "https://example.com/news/apple-ai-chip",
-  },
-  {
-    title: "Federal Reserve Signals Potential Rate Cut in Q4 2025",
-    date: "2025-09-26 12:45:10",
-    author: "Emma Rodriguez",
-    site: "Financial Times",
-    image: "https://picsum.photos/seed/fed/400/300",
-    link: "https://example.com/news/fed-rate-cut",
-  },
-  {
-    title: "Microsoft and OpenAI Expand Partnership with $10B Investment",
-    date: "2025-09-26 11:20:33",
-    author: "David Chen",
-    site: "Business Insider",
-    image: "https://picsum.photos/seed/microsoft/400/300",
-    link: "https://example.com/news/microsoft-openai",
-  },
-  {
-    title: "Amazon Reports Record Q3 Earnings, Beats Expectations",
-    date: "2025-09-26 10:05:18",
-    author: "Lisa Wong",
-    site: "Market Watch",
-    image: "https://picsum.photos/seed/amazon/400/300",
-    link: "https://example.com/news/amazon-earnings",
-  },
-  {
-    title: "Google Launches New Cloud AI Platform for Enterprises",
-    date: "2025-09-26 09:30:45",
-    author: "Michael Brown",
-    site: "Cloud Computing Today",
-    image: "https://picsum.photos/seed/google/400/300",
-    link: "https://example.com/news/google-cloud-ai",
-  },
-  {
-    title: "Meta Introduces Advanced VR Headset with Brain-Computer Interface",
-    date: "2025-09-26 08:15:27",
-    author: "Jennifer Lee",
-    site: "VR World",
-    image: "https://picsum.photos/seed/meta/400/300",
-    link: "https://example.com/news/meta-vr-headset",
-  },
-  {
-    title: "Oil Prices Surge 5% on Middle East Tensions",
-    date: "2025-09-26 07:00:55",
-    author: "Robert Taylor",
-    site: "Energy Daily",
-    image: "https://picsum.photos/seed/oil/400/300",
-    link: "https://example.com/news/oil-prices",
-  },
-  {
-    title: "Netflix Announces Entry into Gaming Hardware Market",
-    date: "2025-09-25 20:45:12",
-    author: "Amanda White",
-    site: "Entertainment Tech",
-    image: "https://picsum.photos/seed/netflix/400/300",
-    link: "https://example.com/news/netflix-gaming",
-  },
-  {
-    title: "Bitcoin Reaches New All-Time High Above $75,000",
-    date: "2025-09-25 19:30:08",
-    author: "Chris Johnson",
-    site: "Crypto News",
-    image: "https://picsum.photos/seed/bitcoin/400/300",
-    link: "https://example.com/news/bitcoin-ath",
-  },
-];
+const fetchLoserStocks = async (): Promise<ActiveStockData[]> => {
+  try {
+    const response = await axios.get<ApiResponse<ActiveStockData[]>>(
+      "https://stock-explore-six.vercel.app/api/v1/losers"
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching loser stocks:", error);
+    throw error;
+  }
+};
+
+const fetchSpotlightStock = async (): Promise<SpotlightData> => {
+  try {
+    const response = await axios.get<ApiResponse<SpotlightData[]>>(
+      "https://stock-explore-six.vercel.app/api/v1/spotlight"
+    );
+    return response.data.data[0]; // Return first item from array
+  } catch (error) {
+    console.error("Error fetching spotlight stock:", error);
+    throw error;
+  }
+};
+
+const fetchNews = async (): Promise<NewsData[]> => {
+  try {
+    const response = await axios.get<ApiResponse<NewsData[]>>(
+      "https://stock-explore-six.vercel.app/api/v1/news"
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching news:", error);
+    throw error;
+  }
+};
 
 // ---------------------
 // Components
@@ -281,7 +210,9 @@ function MarketSnapshot() {
       {loading && (
         <View className="py-8 items-center">
           <ActivityIndicator size="large" color="#ffffff" />
-          <Text className="text-white/70 text-sm mt-2">Loading market data...</Text>
+          <Text className="text-white/70 text-sm mt-2">
+            Loading market data...
+          </Text>
         </View>
       )}
 
@@ -313,42 +244,44 @@ function MarketSnapshot() {
       )}
 
       {/* Data Rows */}
-      {!loading && !error && indexes.map((item, i) => {
-        const changePct = (item.changePercent1D * 100).toFixed(2);
-        const isUp = item.changePercent1D >= 0;
-        const isLast = i === indexes.length - 1;
+      {!loading &&
+        !error &&
+        indexes.map((item, i) => {
+          const changePct = (item.changePercent1D * 100).toFixed(2);
+          const isUp = item.changePercent1D >= 0;
+          const isLast = i === indexes.length - 1;
 
-        return (
-          <View
-            key={item.symbol}
-            className={`flex-row items-center py-3 ${
-              isLast ? "" : "border-b border-white/5"
-            }`}
-          >
-            <View className="flex-1 pr-3">
-              <Text className="text-white font-medium" numberOfLines={1}>
-                {item.name}
-              </Text>
-              <Text className="text-white/60 text-xs mt-0.5">
-                {item.symbol}
-              </Text>
+          return (
+            <View
+              key={item.symbol}
+              className={`flex-row items-center py-3 ${
+                isLast ? "" : "border-b border-white/5"
+              }`}
+            >
+              <View className="flex-1 pr-3">
+                <Text className="text-white font-medium" numberOfLines={1}>
+                  {item.name}
+                </Text>
+                <Text className="text-white/60 text-xs mt-0.5">
+                  {item.symbol}
+                </Text>
+              </View>
+              <View className="items-end w-24">
+                <Text className="text-white text-sm font-medium">
+                  {item.currentValue.toLocaleString()}
+                </Text>
+                <Text
+                  className={`text-xs font-semibold ${
+                    isUp ? "text-emerald-400" : "text-rose-400"
+                  }`}
+                >
+                  {isUp ? "+" : ""}
+                  {changePct}%
+                </Text>
+              </View>
             </View>
-            <View className="items-end w-24">
-              <Text className="text-white text-sm font-medium">
-                {item.currentValue.toLocaleString()}
-              </Text>
-              <Text
-                className={`text-xs font-semibold ${
-                  isUp ? "text-emerald-400" : "text-rose-400"
-                }`}
-              >
-                {isUp ? "+" : ""}
-                {changePct}%
-              </Text>
-            </View>
-          </View>
-        );
-      })}
+          );
+        })}
     </View>
   );
 }
@@ -400,10 +333,77 @@ function StockRow({
 
 function StockLists() {
   const tabs = ["gainers", "losers", "active"] as const;
-  const [active, setActive] = useState<(typeof tabs)[number]>("gainers");
+  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("gainers");
   const [visible, setVisible] = useState(5);
 
-  const data = mockStocks[active] || [];
+  // State for all three tabs
+  const [gainersData, setGainersData] = useState<ActiveStockData[]>([]);
+  const [losersData, setLosersData] = useState<ActiveStockData[]>([]);
+  const [activeStocks, setActiveStocks] = useState<ActiveStockData[]>([]);
+
+  // Loading states
+  const [loadingGainers, setLoadingGainers] = useState(false);
+  const [loadingLosers, setLoadingLosers] = useState(false);
+  const [loadingActive, setLoadingActive] = useState(false);
+
+  // Error states
+  const [errorGainers, setErrorGainers] = useState<string | null>(null);
+  const [errorLosers, setErrorLosers] = useState<string | null>(null);
+  const [errorActive, setErrorActive] = useState<string | null>(null);
+
+  // Load data when tab is selected
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        if (activeTab === "gainers" && gainersData.length === 0) {
+          setLoadingGainers(true);
+          setErrorGainers(null);
+          const data = await fetchGainerStocks();
+          setGainersData(data);
+        } else if (activeTab === "losers" && losersData.length === 0) {
+          setLoadingLosers(true);
+          setErrorLosers(null);
+          const data = await fetchLoserStocks();
+          setLosersData(data);
+        } else if (activeTab === "active" && activeStocks.length === 0) {
+          setLoadingActive(true);
+          setErrorActive(null);
+          const data = await fetchActiveStocks();
+          setActiveStocks(data);
+        }
+      } catch (err) {
+        const errorMessage = `Failed to load ${activeTab} stocks`;
+        if (activeTab === "gainers") setErrorGainers(errorMessage);
+        else if (activeTab === "losers") setErrorLosers(errorMessage);
+        else if (activeTab === "active") setErrorActive(errorMessage);
+        console.error(`Error loading ${activeTab} stocks:`, err);
+      } finally {
+        if (activeTab === "gainers") setLoadingGainers(false);
+        else if (activeTab === "losers") setLoadingLosers(false);
+        else if (activeTab === "active") setLoadingActive(false);
+      }
+    };
+
+    loadData();
+  }, [activeTab, gainersData.length, losersData.length, activeStocks.length]);
+
+  // Get data based on active tab
+  const getData = () => {
+    const stocksData = {
+      gainers: gainersData,
+      losers: losersData,
+      active: activeStocks,
+    };
+
+    return stocksData[activeTab].map((stock) => ({
+      symbol: stock.symbol,
+      exchange: stock.exchange,
+      currentValue: stock.currentValue,
+      changePercent1D: stock.changePercent1D,
+    }));
+  };
+
+  const data = getData();
   const visibleItems = data.slice(0, visible);
 
   const getTabLabel = (tab: (typeof tabs)[number]) => {
@@ -415,19 +415,82 @@ function StockLists() {
     return labels[tab];
   };
 
+  const handleTabPress = (tab: (typeof tabs)[number]) => {
+    setActiveTab(tab);
+    setVisible(5);
+  };
+
+  const retryLoad = async (tab: (typeof tabs)[number]) => {
+    try {
+      if (tab === "gainers") {
+        setLoadingGainers(true);
+        setErrorGainers(null);
+        const data = await fetchGainerStocks();
+        setGainersData(data);
+        setLoadingGainers(false);
+      } else if (tab === "losers") {
+        setLoadingLosers(true);
+        setErrorLosers(null);
+        const data = await fetchLoserStocks();
+        setLosersData(data);
+        setLoadingLosers(false);
+      } else if (tab === "active") {
+        setLoadingActive(true);
+        setErrorActive(null);
+        const data = await fetchActiveStocks();
+        setActiveStocks(data);
+        setLoadingActive(false);
+      }
+    } catch (err) {
+      const errorMessage = `Failed to load ${tab} stocks`;
+      if (tab === "gainers") {
+        setErrorGainers(errorMessage);
+        setLoadingGainers(false);
+      } else if (tab === "losers") {
+        setErrorLosers(errorMessage);
+        setLoadingLosers(false);
+      } else if (tab === "active") {
+        setErrorActive(errorMessage);
+        setLoadingActive(false);
+      }
+    }
+  };
+
+  // Get current loading and error states
+  const getCurrentStates = () => {
+    if (activeTab === "gainers") {
+      return {
+        isLoading: loadingGainers,
+        hasError: errorGainers && !loadingGainers,
+        error: errorGainers,
+      };
+    } else if (activeTab === "losers") {
+      return {
+        isLoading: loadingLosers,
+        hasError: errorLosers && !loadingLosers,
+        error: errorLosers,
+      };
+    } else {
+      return {
+        isLoading: loadingActive,
+        hasError: errorActive && !loadingActive,
+        error: errorActive,
+      };
+    }
+  };
+
+  const { isLoading, hasError, error } = getCurrentStates();
+
   return (
     <View className="bg-white/5 rounded-2xl p-5">
       {/* Tabs */}
       <View className="flex-row mb-6 bg-white/5 rounded-xl p-1">
         {tabs.map((tab) => {
-          const isActive = active === tab;
+          const isActive = activeTab === tab;
           return (
             <Pressable
               key={tab}
-              onPress={() => {
-                setActive(tab);
-                setVisible(5);
-              }}
+              onPress={() => handleTabPress(tab)}
               className={`flex-1 py-3 px-2 rounded-lg items-center ${
                 isActive ? "bg-white/15" : "bg-transparent"
               }`}
@@ -453,27 +516,52 @@ function StockLists() {
         </Text>
       </View>
 
+      {/* Loading State */}
+      {isLoading && (
+        <View className="py-8 items-center">
+          <ActivityIndicator size="large" color="#ffffff" />
+          <Text className="text-white/70 text-sm mt-2">
+            Loading {activeTab} stocks...
+          </Text>
+        </View>
+      )}
+
+      {/* Error State */}
+      {hasError && (
+        <View className="py-8 items-center">
+          <Text className="text-rose-400 text-sm mb-2">{error}</Text>
+          <Pressable
+            onPress={() => retryLoad(activeTab)}
+            className="px-4 py-2 bg-white/10 rounded-lg"
+          >
+            <Text className="text-white text-sm">Retry</Text>
+          </Pressable>
+        </View>
+      )}
+
       {/* Empty State */}
-      {visibleItems.length === 0 && (
+      {!isLoading && !hasError && visibleItems.length === 0 && (
         <View className="py-8 items-center">
           <Text className="text-white/50 text-sm">No stocks available</Text>
         </View>
       )}
 
       {/* Rows */}
-      {visibleItems.map((item, idx) => (
-        <StockRow
-          key={`${item.symbol}-${idx}`}
-          symbol={item.symbol}
-          exchange={item.exchange}
-          price={item.currentValue}
-          change={item.changePercent1D}
-          isLast={idx === visibleItems.length - 1 && visible >= data.length}
-        />
-      ))}
+      {!isLoading &&
+        !hasError &&
+        visibleItems.map((item, idx) => (
+          <StockRow
+            key={`${item.symbol}-${idx}`}
+            symbol={item.symbol}
+            exchange={item.exchange}
+            price={item.currentValue}
+            change={item.changePercent1D}
+            isLast={idx === visibleItems.length - 1 && visible >= data.length}
+          />
+        ))}
 
       {/* View More */}
-      {visible < data.length && (
+      {!isLoading && !hasError && visible < data.length && (
         <Pressable
           onPress={() => setVisible((v) => v + 5)}
           className="mt-4 py-3 px-4 rounded-xl bg-white/10 items-center border border-white/10"
@@ -488,8 +576,29 @@ function StockLists() {
 }
 
 function StockSpotlight() {
-  const isUp = spotlightStock.changePercent1D >= 0;
-  const changePct = spotlightStock.changePercent1D.toFixed(2);
+  const [spotlightData, setSpotlightData] = useState<SpotlightData | null>(
+    null
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadSpotlightData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchSpotlightStock();
+        setSpotlightData(data);
+      } catch (err) {
+        setError("Failed to load spotlight stock");
+        console.error("Error loading spotlight stock:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSpotlightData();
+  }, []);
 
   return (
     <View className="bg-white/5 rounded-2xl p-5">
@@ -497,54 +606,139 @@ function StockSpotlight() {
         Stock Spotlight
       </Text>
 
-      <View className="flex-row items-start">
-        {/* Logo */}
-        <View className="h-16 w-16 rounded-xl bg-white items-center justify-center mr-4 overflow-hidden">
-          <Image
-            source={{ uri: spotlightStock.logo }}
-            className="h-12 w-12"
-            resizeMode="contain"
-          />
-        </View>
-
-        {/* Info */}
-        <View className="flex-1">
-          <View className="flex-row items-center justify-between mb-1">
-            <Text className="text-white font-bold text-lg">
-              {spotlightStock.symbol}
-            </Text>
-            <Text className="text-white font-semibold text-base">
-              ${spotlightStock.currentValue.toFixed(2)}
-            </Text>
-          </View>
-
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-white/70 text-sm flex-1" numberOfLines={1}>
-              {spotlightStock.name}
-            </Text>
-            <Text
-              className={`text-sm font-semibold ml-2 ${
-                isUp ? "text-emerald-400" : "text-rose-400"
-              }`}
-            >
-              {isUp ? "+" : ""}
-              {changePct}%
-            </Text>
-          </View>
-
-          <Text className="text-white/60 text-sm leading-5">
-            {spotlightStock.description}
+      {/* Loading State */}
+      {loading && (
+        <View className="py-8 items-center">
+          <ActivityIndicator size="large" color="#ffffff" />
+          <Text className="text-white/70 text-sm mt-2">
+            Loading spotlight stock...
           </Text>
         </View>
-      </View>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <View className="py-8 items-center">
+          <Text className="text-rose-400 text-sm mb-2">{error}</Text>
+          <Pressable
+            onPress={async () => {
+              try {
+                setLoading(true);
+                setError(null);
+                const data = await fetchSpotlightStock();
+                setSpotlightData(data);
+              } catch (err) {
+                setError("Failed to load spotlight stock");
+              } finally {
+                setLoading(false);
+              }
+            }}
+            className="px-4 py-2 bg-white/10 rounded-lg"
+          >
+            <Text className="text-white text-sm">Retry</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* Data Display */}
+      {!loading && !error && spotlightData && (
+        <View className="flex-row items-start">
+          {/* Logo */}
+          <View className="h-16 w-16 rounded-xl bg-white items-center justify-center mr-4 overflow-hidden">
+            <Image
+              source={{ uri: spotlightData.image }}
+              className="h-12 w-12"
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Info */}
+          <View className="flex-1">
+            <View className="flex-row items-center justify-between mb-1">
+              <Text className="text-white font-bold text-lg">
+                {spotlightData.symbol}
+              </Text>
+              <Text className="text-white font-semibold text-base">
+                ${spotlightData.price.toFixed(2)}
+              </Text>
+            </View>
+
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-white/70 text-sm flex-1" numberOfLines={1}>
+                {spotlightData.companyName}
+              </Text>
+              <Text
+                className={`text-sm font-semibold ml-2 ${
+                  spotlightData.changePercentage >= 0
+                    ? "text-emerald-400"
+                    : "text-rose-400"
+                }`}
+              >
+                {spotlightData.changePercentage >= 0 ? "+" : ""}
+                {spotlightData.changePercentage.toFixed(2)}%
+              </Text>
+            </View>
+
+            <Text className="text-white/60 text-sm leading-5" numberOfLines={3}>
+              {spotlightData.description}
+            </Text>
+
+            {/* Additional Info */}
+            <View className="flex-row items-center mt-3 space-x-4">
+              <View className="flex-1">
+                <Text className="text-white/50 text-xs">Market Cap</Text>
+                <Text className="text-white text-sm font-medium">
+                  ${(spotlightData.marketCap / 1000000).toFixed(1)}M
+                </Text>
+              </View>
+              <View className="flex-1">
+                <Text className="text-white/50 text-xs">Volume</Text>
+                <Text className="text-white text-sm font-medium">
+                  {(spotlightData.volume / 1000000).toFixed(1)}M
+                </Text>
+              </View>
+              <View className="flex-1">
+                <Text className="text-white/50 text-xs">Industry</Text>
+                <Text
+                  className="text-white text-sm font-medium"
+                  numberOfLines={1}
+                >
+                  {spotlightData.industry}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
 
 function NewsSection() {
   const [visible, setVisible] = useState(5);
+  const [newsData, setNewsData] = useState<NewsData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const visibleNews = mockNews.slice(0, visible);
+  useEffect(() => {
+    const loadNews = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchNews();
+        setNewsData(data);
+      } catch (err) {
+        setError("Failed to load news");
+        console.error("Error loading news:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadNews();
+  }, []);
+
+  const visibleNews = newsData.slice(0, visible);
 
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
@@ -563,67 +757,111 @@ function NewsSection() {
     }
   };
 
-  const handleOpenLink = (link: string) => {
-    // In React Native, you'd use Linking.openURL(link)
-    console.log("Opening:", link);
+  const handleOpenLink = async (link: string) => {
+    try {
+      const supported = await Linking.canOpenURL(link);
+      if (supported) {
+        await Linking.openURL(link);
+      } else {
+        console.error("Don't know how to open URI: " + link);
+      }
+    } catch (error) {
+      console.error("An error occurred", error);
+    }
+  };
+
+  const retryLoad = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchNews();
+      setNewsData(data);
+    } catch (err) {
+      setError("Failed to load news");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <View className="bg-white/5 rounded-2xl p-5">
       <Text className="text-white text-xl font-semibold mb-4">Market News</Text>
 
-      {/* News Items */}
-      {visibleNews.map((item, idx) => {
-        const isLast =
-          idx === visibleNews.length - 1 && visible >= mockNews.length;
-        return (
+      {/* Loading State */}
+      {loading && (
+        <View className="py-8 items-center">
+          <ActivityIndicator size="large" color="#ffffff" />
+          <Text className="text-white/70 text-sm mt-2">Loading news...</Text>
+        </View>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <View className="py-8 items-center">
+          <Text className="text-rose-400 text-sm mb-2">{error}</Text>
           <Pressable
-            key={idx}
-            onPress={() => handleOpenLink(item.link)}
-            className={`py-4 ${isLast ? "" : "border-b border-white/5"}`}
+            onPress={retryLoad}
+            className="px-4 py-2 bg-white/10 rounded-lg"
           >
-            <View className="flex-row">
-              {/* Thumbnail */}
-              <View className="w-20 h-20 rounded-lg overflow-hidden bg-white/10 mr-3">
-                <Image
-                  source={{ uri: item.image }}
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
-              </View>
+            <Text className="text-white text-sm">Retry</Text>
+          </Pressable>
+        </View>
+      )}
 
-              {/* Content */}
-              <View className="flex-1">
-                <Text
-                  className="text-white font-medium text-base leading-5 mb-2"
-                  numberOfLines={2}
-                >
-                  {item.title}
-                </Text>
+      {/* News Items */}
+      {!loading &&
+        !error &&
+        visibleNews.map((item, idx) => {
+          const isLast =
+            idx === visibleNews.length - 1 && visible >= newsData.length;
+          return (
+            <Pressable
+              key={idx}
+              onPress={() => handleOpenLink(item.link)}
+              className={`py-4 ${isLast ? "" : "border-b border-white/5"}`}
+            >
+              <View className="flex-row">
+                {/* Thumbnail */}
+                <View className="w-20 h-20 rounded-lg overflow-hidden bg-white/10 mr-3">
+                  <Image
+                    source={{ uri: item.image }}
+                    className="w-full h-full"
+                    resizeMode="cover"
+                  />
+                </View>
 
-                <View className="flex-row items-center">
-                  <Text className="text-white/50 text-xs" numberOfLines={1}>
-                    {item.site}
+                {/* Content */}
+                <View className="flex-1">
+                  <Text
+                    className="text-white font-medium text-base leading-5 mb-2"
+                    numberOfLines={2}
+                  >
+                    {item.title}
                   </Text>
-                  <Text className="text-white/30 text-xs mx-1.5">•</Text>
-                  <Text className="text-white/50 text-xs">
-                    {formatTimeAgo(item.date)}
-                  </Text>
+
+                  <View className="flex-row items-center">
+                    <Text className="text-white/50 text-xs" numberOfLines={1}>
+                      {item.site}
+                    </Text>
+                    <Text className="text-white/30 text-xs mx-1.5">•</Text>
+                    <Text className="text-white/50 text-xs">
+                      {formatTimeAgo(item.date)}
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </View>
-          </Pressable>
-        );
-      })}
+            </Pressable>
+          );
+        })}
 
       {/* View More */}
-      {visible < mockNews.length && (
+      {!loading && !error && visible < newsData.length && (
         <Pressable
           onPress={() => setVisible((v) => v + 5)}
           className="mt-4 py-3 px-4 rounded-xl bg-white/10 items-center border border-white/10"
         >
           <Text className="text-white font-medium text-sm">
-            View More ({mockNews.length - visible} remaining)
+            View More ({newsData.length - visible} remaining)
           </Text>
         </Pressable>
       )}
